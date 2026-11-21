@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23ffd94d'/><text x='8' y='12' font-size='11' text-anchor='middle'>V</text></svg>">
+<title>Porto Verde — an open-world crime game</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #0b1020; font-family: "Segoe UI", Verdana, sans-serif; color: #fff; }
+  #app { position: fixed; inset: 0; }
+  canvas.webgl { display: block; }
+  .panel { background: rgba(8, 12, 24, 0.72); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px; backdrop-filter: blur(2px); }
+  #hud { position: absolute; inset: 0; pointer-events: none; display: none; }
+  #hud.on { display: block; }
+  #cashBox { position: absolute; top: 12px; left: 12px; padding: 8px 14px; font-size: 22px;
+    font-weight: 700; color: #7dff9a; letter-spacing: 1px; }
+  #cashBox small { display: block; font-size: 11px; color: #cfe8ff; letter-spacing: 2px; }
+  #hpWrap { position: absolute; top: 76px; left: 12px; width: 180px; padding: 7px 10px; }
+  #hpWrap .lbl { font-size: 11px; letter-spacing: 2px; color: #ffd9d9; }
+  #hpBarOuter { height: 10px; background: #30141a; border-radius: 5px; margin-top: 4px; overflow: hidden; }
+  #hpBar { height: 100%; width: 100%; background: linear-gradient(90deg, #ff5a5a, #ff9a3d); }
+  #wantedBox { position: absolute; top: 12px; right: 12px; padding: 8px 14px; text-align: right; }
+  #stars { font-size: 26px; letter-spacing: 4px; color: #ffd94d; text-shadow: 0 0 8px rgba(255, 200, 40, .7); }
+  #stars .off { color: rgba(255,255,255,0.25); text-shadow: none; }
+  #wantedBox .lbl { font-size: 11px; letter-spacing: 2px; color: #ffe9a8; }
+  #clockBox { position: absolute; top: 86px; right: 12px; padding: 6px 12px; font-size: 15px;
+    letter-spacing: 2px; color: #dff3ff; }
+  #objBox { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    padding: 10px 18px; text-align: center; max-width: 46vw; }
+  #objTitle { font-size: 13px; letter-spacing: 3px; color: #ffd94d; font-weight: 700; }
+  #objText { font-size: 16px; margin-top: 2px; }
+  #objTimer { font-size: 20px; font-weight: 700; color: #ff8a5a; margin-top: 2px; }
+  #speedBox { position: absolute; right: 12px; bottom: 12px; padding: 8px 14px; text-align: right; }
+  #speedVal { font-size: 30px; font-weight: 800; line-height: 1; }
+  #speedBox .lbl { font-size: 11px; letter-spacing: 2px; color: #cfe8ff; }
+  #ammoBox { font-size: 15px; color: #ffe9a8; margin-top: 4px; }
+  #taxiPanel { position: absolute; left: 12px; bottom: 210px; padding: 10px 14px; display: none;
+    border-color: #ffd94d; }
+  #taxiPanel.on { display: block; }
+  #taxiPanel .lbl { font-size: 11px; letter-spacing: 2px; color: #ffd94d; }
+  #taxiFare { font-size: 20px; font-weight: 700; color: #fff; }
+  #taxiTimer { font-size: 15px; color: #ff8a5a; }
+  #vaultWrap { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%);
+    width: 340px; padding: 10px 14px; display: none; text-align: center; }
+  #vaultWrap.on { display: block; }
+  #vaultWrap .lbl { font-size: 12px; letter-spacing: 3px; color: #ffd94d; }
+  #vaultOuter { height: 14px; background: #241a08; border-radius: 7px; margin-top: 6px; overflow: hidden; }
+  #vaultBar { height: 100%; width: 0%; background: linear-gradient(90deg, #ffd94d, #ff9a3d); }
+  #minimap { position: absolute; left: 12px; bottom: 12px; width: 184px; height: 184px;
+    border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(6,10,20,0.8); }
+  #banner { position: absolute; top: 34%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 44px; font-weight: 900; letter-spacing: 4px; color: #ffd94d;
+    text-shadow: 0 2px 0 #7a4d00, 0 0 24px rgba(255, 190, 40, .8); display: none; text-align: center; }
+  #banner small { display: block; font-size: 18px; letter-spacing: 2px; color: #fff; margin-top: 6px; }
+  #toast { position: absolute; bottom: 210px; right: 12px; padding: 8px 14px; font-size: 15px;
+    display: none; color: #dff3ff; }
+  #hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    padding: 6px 14px; font-size: 13px; color: #cfe8ff; white-space: nowrap; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px;
+    margin: -9px 0 0 -9px; display: none; }
+  #crosshair:before, #crosshair:after { content: ""; position: absolute; background: #fff; }
+  #crosshair:before { left: 8px; top: 0; width: 2px; height: 18px; }
+  #crosshair:after { left: 0; top: 8px; width: 18px; height: 2px; }
+  .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, rgba(10,16,38,.88), rgba(40,14,40,.82)); z-index: 10; }
+  .overlay.hidden { display: none; }
+  .card { width: min(680px, 92vw); max-height: 92vh; overflow-y: auto; padding: 28px 34px;
+    background: rgba(10, 14, 30, 0.92); border: 1px solid rgba(255, 217, 77, 0.45);
+    border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .card h1 { margin: 0; font-size: 52px; letter-spacing: 6px; color: #ffd94d;
+    text-shadow: 0 3px 0 #7a4d00; line-height: 1; }
+  .card h1 span { color: #7dff9a; }
+  .card h2 { margin: 4px 0 0; font-size: 15px; letter-spacing: 4px; color: #9fd8ff; font-weight: 600; }
+  .card p.story { font-size: 15px; line-height: 1.55; color: #e8f2ff; }
+  .card p.story b { color: #ffd94d; }
+  .missionRow { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 6px 0;
+    border: 1px solid rgba(255,255,255,0.16); border-radius: 10px; background: rgba(255,255,255,0.05); }
+  .missionRow .num { font-size: 22px; font-weight: 800; color: #ffd94d; width: 34px; }
+  .missionRow .body { flex: 1; }
+  .missionRow .name { font-size: 16px; font-weight: 700; }
+  .missionRow .desc { font-size: 13px; color: #bcd6f2; }
+  .missionRow .pay { font-size: 15px; font-weight: 700; color: #7dff9a; }
+  .missionRow.locked { opacity: 0.45; }
+  .missionRow.done .name:after { content: "  ✓ DONE"; color: #7dff9a; font-size: 12px; }
+  button { pointer-events: auto; cursor: pointer; font-family: inherit; }
+  .btn { display: inline-block; padding: 12px 22px; margin: 6px 6px 0 0; font-size: 16px; font-weight: 700;
+    letter-spacing: 1px; color: #1a1200; background: linear-gradient(180deg, #ffe066, #ffb52e);
+    border: none; border-radius: 10px; box-shadow: 0 4px 0 #7a4d00; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #7a4d00; }
+  .btn.ghost { background: rgba(255,255,255,0.12); color: #fff; box-shadow: none;
+    border: 1px solid rgba(255,255,255,0.35); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .controls { font-size: 13px; line-height: 1.7; color: #bcd6f2; columns: 2; column-gap: 28px; }
+  .controls b { color: #fff; background: rgba(255,255,255,0.14); border-radius: 4px; padding: 1px 6px; }
+  #errBox { position: absolute; left: 12px; bottom: 12px; z-index: 50; max-width: 60vw; color: #ffb0b0;
+    font-size: 12px; white-space: pre-wrap; display: none; }
+  #vignette { position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background: radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,0.42) 100%); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div id="cashBox" class="panel"><small>PORTO VERDE • CASH</small><span id="cashVal">$0</span></div>
+  <div id="hpWrap" class="panel"><div class="lbl">HEALTH</div><div id="hpBarOuter"><div id="hpBar"></div></div></div>
+  <div id="wantedBox" class="panel"><div class="lbl">WANTED</div><div id="stars"></div></div>
+  <div id="clockBox" class="panel"><span id="clockVal">17:30</span> • <span id="dayVal">DAY 1</span></div>
+  <div id="objBox" class="panel"><div id="objTitle">FREE ROAM</div><div id="objText">Explore Porto Verde. Steal a car, earn cash, stay out of trouble.</div><div id="objTimer"></div></div>
+  <div id="speedBox" class="panel"><div id="speedVal">0</div><div class="lbl" id="speedLbl">KM/H • ON FOOT</div><div id="ammoBox">PISTOL — <span id="ammoVal">12 / 12</span></div></div>
+  <div id="taxiPanel" class="panel"><div class="lbl">TAXI SHIFT</div><div id="taxiFare">FARE $0</div><div id="taxiTimer"></div></div>
+  <div id="vaultWrap" class="panel"><div class="lbl">CRACKING THE VAULT — HOLD E</div><div id="vaultOuter"><div id="vaultBar"></div></div></div>
+  <canvas id="minimap" width="184" height="184"></canvas>
+  <div id="banner"></div>
+  <div id="toast" class="panel"></div>
+  <div id="hint" class="panel">WASD move/drive • E enter/steal car • F exit • Click shoot • R reload • T taxi • Shift nitro • Space handbrake • P pause</div>
+  <div id="crosshair"></div>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="card">
+    <h1>PORTO <span>VERDE</span></h1>
+    <h2>AN OPEN-WORLD CRIME STORY • SUN, SALT &amp; STOLEN CARS</h2>
+    <p class="story">You are <b>Mara Solis</b>, fresh out of the Verde County lockup with $40 and a borrowed
+    jacket. The city of <b>Porto Verde</b> is yours to take: steal cars, outrun the Verde PD, run fares in
+    a yellow cab, and — if you have the nerve — crack the <b>Banco Verde</b> vault. Five jobs. One city.
+    No rules but yours.</p>
+    <div id="missionList"></div>
+    <div>
+      <button class="btn" id="btnContinue">CONTINUE</button>
+      <button class="btn ghost" id="btnFreeroam">FREE ROAM</button>
+      <button class="btn ghost" id="btnReset">NEW GAME</button>
+    </div>
+    <div class="controls" style="margin-top:16px">
+      <div><b>W A S D</b> walk / drive</div>
+      <div><b>Mouse drag</b> orbit camera</div>
+      <div><b>E</b> enter / steal car, interact</div>
+      <div><b>F</b> exit vehicle</div>
+      <div><b>Click / J</b> shoot pistol</div>
+      <div><b>R</b> reload</div>
+      <div><b>T</b> start / end taxi shift</div>
+      <div><b>Shift</b> run / nitro</div>
+      <div><b>Space</b> handbrake</div>
+      <div><b>P</b> pause &amp; missions</div>
+    </div>
+  </div>
+</div>
+
+<div id="pauseMenu" class="overlay hidden">
+  <div class="card">
+    <h1 style="font-size:36px">PAUSED</h1>
+    <p class="story">Porto Verde waits for no one. Except right now — it is waiting for you.</p>
+    <div id="pauseMissionList"></div>
+    <div>
+      <button class="btn" id="btnResume">RESUME</button>
+      <button class="btn ghost" id="btnQuitToMenu">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+<div id="gameover" class="overlay hidden">
+  <div class="card" style="text-align:center">
+    <h1 id="goTitle" style="font-size:44px">BUSTED</h1>
+    <p class="story" id="goText">The Verde PD caught up with you.</p>
+    <button class="btn" id="btnRespawn">BACK ON THE STREETS</button>
+  </div>
+</div>
+
+<div id="errBox"></div>
+<script src="./vendor/three.min.js"></script>
+<script type="module" src="./src/boot.js"></script>
+</body>
+</html>
