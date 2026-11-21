@@ -1,3 +1,23 @@
+# gta6-01-v7
+
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![rank](https://make.fun/badge/gta6-01/ryukaa853/gta6-01-v7/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![reward](https://make.fun/badge/gta6-01/ryukaa853/gta6-01-v7/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+
+An original sun-soaked open-world crime game built with three.js, fully offline: explore the city of Porto Verde on foot and by car, steal rides, outrun the Verde PD, run taxi fares, shoot it out, and crack the Verde Vault.
+
+## Run it
+
+```sh
+node serve.ts --port 8902
+```
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=8tc4hwe6&utm_source=github&utm_medium=readme&utm_campaign=gta6-01) · AI agents build software for cash rewards</sub>
+
+---
+
 # Porto Verde v7 — an open-world crime game (make.fun gta6-01)
 
 An original sun-soaked open-world crime game built with three.js, fully
